@@ -1,0 +1,201 @@
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque[opsz,wdth,wght].woff2")
+    format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/fonts/Outfit[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Sunny yellow primary */
+    --primary: 0.85 0.17 88;
+    --primary-foreground: 0.22 0.04 80;
+
+    /* Sky blue secondary */
+    --secondary: 0.72 0.14 222;
+    --secondary-foreground: 0.98 0.01 222;
+
+    /* Coral accent */
+    --accent: 0.72 0.18 28;
+    --accent-foreground: 0.98 0.01 28;
+
+    /* Warm white background */
+    --background: 0.99 0.01 88;
+    --foreground: 0.22 0.04 260;
+
+    /* Card */
+    --card: 1 0 0;
+    --card-foreground: 0.22 0.04 260;
+
+    /* Popover */
+    --popover: 1 0 0;
+    --popover-foreground: 0.22 0.04 260;
+
+    /* Muted */
+    --muted: 0.95 0.02 88;
+    --muted-foreground: 0.55 0.03 260;
+
+    /* Destructive */
+    --destructive: 0.65 0.22 25;
+    --destructive-foreground: 0.98 0.01 25;
+
+    /* UI elements */
+    --border: 0.88 0.04 88;
+    --input: 0.88 0.04 88;
+    --ring: 0.85 0.17 88;
+    --radius: 1rem;
+
+    /* Charts */
+    --chart-1: 0.85 0.17 88;
+    --chart-2: 0.72 0.14 222;
+    --chart-3: 0.72 0.18 28;
+    --chart-4: 0.75 0.16 160;
+    --chart-5: 0.78 0.14 305;
+
+    /* Sidebar */
+    --sidebar: 1 0 0;
+    --sidebar-foreground: 0.22 0.04 260;
+    --sidebar-primary: 0.85 0.17 88;
+    --sidebar-primary-foreground: 0.22 0.04 80;
+    --sidebar-accent: 0.95 0.04 88;
+    --sidebar-accent-foreground: 0.22 0.04 260;
+    --sidebar-border: 0.88 0.04 88;
+    --sidebar-ring: 0.85 0.17 88;
+
+    /* Custom brand tokens */
+    --sunshine: 0.88 0.19 90;
+    --skyblue: 0.7 0.16 220;
+    --coral: 0.72 0.2 28;
+    --mint: 0.78 0.16 155;
+    --lavender: 0.78 0.12 305;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-sunshine {
+    color: oklch(var(--sunshine));
+  }
+  .bg-sunshine {
+    background-color: oklch(var(--sunshine));
+  }
+  .bg-sunshine\/10 {
+    background-color: oklch(var(--sunshine) / 0.1);
+  }
+  .bg-sunshine\/20 {
+    background-color: oklch(var(--sunshine) / 0.2);
+  }
+  .bg-sunshine\/30 {
+    background-color: oklch(var(--sunshine) / 0.3);
+  }
+  .border-sunshine {
+    border-color: oklch(var(--sunshine));
+  }
+
+  .text-skyblue {
+    color: oklch(var(--skyblue));
+  }
+  .bg-skyblue {
+    background-color: oklch(var(--skyblue));
+  }
+  .bg-skyblue\/10 {
+    background-color: oklch(var(--skyblue) / 0.1);
+  }
+  .bg-skyblue\/20 {
+    background-color: oklch(var(--skyblue) / 0.2);
+  }
+
+  .text-coral {
+    color: oklch(var(--coral));
+  }
+  .bg-coral {
+    background-color: oklch(var(--coral));
+  }
+  .bg-coral\/10 {
+    background-color: oklch(var(--coral) / 0.1);
+  }
+  .bg-coral\/20 {
+    background-color: oklch(var(--coral) / 0.2);
+  }
+
+  .text-mint {
+    color: oklch(var(--mint));
+  }
+  .bg-mint {
+    background-color: oklch(var(--mint));
+  }
+  .bg-mint\/10 {
+    background-color: oklch(var(--mint) / 0.1);
+  }
+  .bg-mint\/20 {
+    background-color: oklch(var(--mint) / 0.2);
+  }
+
+  .text-lavender {
+    color: oklch(var(--lavender));
+  }
+  .bg-lavender {
+    background-color: oklch(var(--lavender));
+  }
+  .bg-lavender\/10 {
+    background-color: oklch(var(--lavender) / 0.1);
+  }
+  .bg-lavender\/20 {
+    background-color: oklch(var(--lavender) / 0.2);
+  }
+
+  .shadow-warm {
+    box-shadow: 0 4px 20px -4px oklch(var(--sunshine) / 0.25), 0 2px 8px -2px
+      oklch(0.22 0.04 260 / 0.08);
+  }
+
+  .shadow-blue {
+    box-shadow: 0 4px 20px -4px oklch(var(--skyblue) / 0.25), 0 2px 8px -2px
+      oklch(0.22 0.04 260 / 0.08);
+  }
+
+  .shadow-coral {
+    box-shadow: 0 4px 20px -4px oklch(var(--coral) / 0.25), 0 2px 8px -2px
+      oklch(0.22 0.04 260 / 0.08);
+  }
+
+  .shadow-mint {
+    box-shadow: 0 4px 20px -4px oklch(var(--mint) / 0.25), 0 2px 8px -2px
+      oklch(0.22 0.04 260 / 0.08);
+  }
+}
