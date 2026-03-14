@@ -2,11 +2,11 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
-import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 
 actor {
+  // ── Original stable types (unchanged to preserve upgrade compatibility) ──
   type Doubt = {
     category : Text;
     message : Text;
@@ -20,101 +20,115 @@ actor {
     timestamp : Time.Time;
   };
 
-  module Doubt {
-    public func compareByTimestamp(d1 : Doubt, d2 : Doubt) : Order.Order {
-      if (d1.timestamp < d2.timestamp) { return #less };
-      if (d1.timestamp > d2.timestamp) { return #greater };
-      #equal;
-    };
+  // ── New type for storing teacher answers (separate map, no upgrade issue) ──
+  type DoubtAnswer = {
+    teacherName : Text;
+    answer : Text;
+    answeredAt : Time.Time;
   };
 
-  module TeacherMessage {
-    public func compareByTimestamp(m1 : TeacherMessage, m2 : TeacherMessage) : Order.Order {
-      if (m1.timestamp < m2.timestamp) { return #less };
-      if (m1.timestamp > m2.timestamp) { return #greater };
-      #equal;
-    };
+  // ── Return type combining doubt + optional answer ──
+  type DoubtInfo = {
+    id : Text;
+    category : Text;
+    message : Text;
+    timestamp : Time.Time;
+    answer : ?Text;
+    answeredBy : ?Text;
+    answeredAt : ?Time.Time;
   };
 
+  // ── Stable storage (original vars kept to avoid discard errors) ──
   let doubts = Map.empty<Text, Doubt>();
   var doubtCounter = 0;
 
+  // Preserved from previous version to avoid M0169 discard errors
   let teacherMessages = Map.empty<Text, TeacherMessage>();
   var teacherMessageCounter = 0;
 
-  public shared ({ caller }) func submitDoubt(category : Text, message : Text) : async Text {
+  // New stable map for answers (fresh — no upgrade conflict)
+  let doubtAnswers = Map.empty<Text, DoubtAnswer>();
+
+  // ── Helpers ──
+  func makeDoubtInfo(id : Text, d : Doubt) : DoubtInfo {
+    let ans = doubtAnswers.get(id);
+    {
+      id;
+      category = d.category;
+      message = d.message;
+      timestamp = d.timestamp;
+      answer = switch ans { case (?a) ?a.answer; case null null };
+      answeredBy = switch ans { case (?a) ?a.teacherName; case null null };
+      answeredAt = switch ans { case (?a) ?a.answeredAt; case null null };
+    };
+  };
+
+  func compareByTimestamp(d1 : DoubtInfo, d2 : DoubtInfo) : Order.Order {
+    if (d1.timestamp > d2.timestamp) { return #less };
+    if (d1.timestamp < d2.timestamp) { return #greater };
+    #equal;
+  };
+
+  // ── Public API ──
+  public shared func submitDoubt(category : Text, message : Text) : async Text {
     let id = "doubt-" # doubtCounter.toText();
     doubtCounter += 1;
-
-    let newDoubt : Doubt = {
-      category;
-      message;
-      timestamp = Time.now();
-    };
-
-    doubts.add(id, newDoubt);
+    doubts.add(id, { category; message; timestamp = Time.now() });
     id;
   };
 
-  public query ({ caller }) func getAllDoubts() : async [Doubt] {
-    doubts.values().toArray().sort(Doubt.compareByTimestamp);
+  public query func getAllDoubts() : async [DoubtInfo] {
+    let result = List.empty<DoubtInfo>();
+    for ((id, d) in doubts.entries()) {
+      result.add(makeDoubtInfo(id, d));
+    };
+    result.toArray().sort(compareByTimestamp);
   };
 
-  public query ({ caller }) func getDoubtsByCategory(category : Text) : async [Doubt] {
-    let filtered = List.empty<Doubt>();
-
-    for (doubt in doubts.values()) {
-      if (doubt.category == category) {
-        filtered.add(doubt);
+  public query func getUnansweredDoubts() : async [DoubtInfo] {
+    let result = List.empty<DoubtInfo>();
+    for ((id, d) in doubts.entries()) {
+      if (doubtAnswers.get(id) == null) {
+        result.add(makeDoubtInfo(id, d));
       };
     };
-
-    filtered.toArray().sort(Doubt.compareByTimestamp);
+    result.toArray().sort(compareByTimestamp);
   };
 
-  public shared ({ caller }) func updateDoubt(doubtId : Text, newCategory : Text, newMessage : Text) : async () {
+  public query func getAnsweredDoubts() : async [DoubtInfo] {
+    let result = List.empty<DoubtInfo>();
+    for ((id, d) in doubts.entries()) {
+      if (doubtAnswers.get(id) != null) {
+        result.add(makeDoubtInfo(id, d));
+      };
+    };
+    result.toArray().sort(compareByTimestamp);
+  };
+
+  public shared func answerDoubt(doubtId : Text, teacherName : Text, answer : Text) : async () {
     switch (doubts.get(doubtId)) {
       case (null) {
-        Runtime.trap("Doubt with ID " # doubtId # " not found");
+        Runtime.trap("Doubt " # doubtId # " not found");
       };
-      case (?existingDoubt) {
-        let updatedDoubt : Doubt = {
-          category = newCategory;
-          message = newMessage;
-          timestamp = Time.now();
-        };
-        doubts.add(doubtId, updatedDoubt);
+      case (?_) {
+        doubtAnswers.add(doubtId, {
+          teacherName;
+          answer;
+          answeredAt = Time.now();
+        });
       };
     };
   };
 
-  public shared ({ caller }) func deleteDoubt(doubtId : Text) : async () {
+  public shared func deleteDoubt(doubtId : Text) : async () {
     switch (doubts.get(doubtId)) {
       case (null) {
-        Runtime.trap("Doubt with ID " # doubtId # " not found");
+        Runtime.trap("Doubt " # doubtId # " not found");
       };
       case (?_) {
         doubts.remove(doubtId);
+        doubtAnswers.remove(doubtId);
       };
     };
-  };
-
-  public shared ({ caller }) func sendTeacherMessage(teacherName : Text, studentName : Text, message : Text) : async Text {
-    let id = "tmsg-" # teacherMessageCounter.toText();
-    teacherMessageCounter += 1;
-
-    let newMsg : TeacherMessage = {
-      teacherName;
-      studentName;
-      message;
-      timestamp = Time.now();
-    };
-
-    teacherMessages.add(id, newMsg);
-    id;
-  };
-
-  public query ({ caller }) func getTeacherMessages() : async [TeacherMessage] {
-    teacherMessages.values().toArray().sort(TeacherMessage.compareByTimestamp);
   };
 };

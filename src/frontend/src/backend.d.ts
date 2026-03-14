@@ -7,16 +7,21 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export type Time = bigint;
 export interface Doubt {
+    id: string;
     message: string;
     timestamp: Time;
     category: string;
+    answer: Option<string>;
+    answeredBy: Option<string>;
+    answeredAt: Option<Time>;
 }
-export type Time = bigint;
 export interface backendInterface {
     deleteDoubt(doubtId: string): Promise<void>;
     getAllDoubts(): Promise<Array<Doubt>>;
-    getDoubtsByCategory(category: string): Promise<Array<Doubt>>;
+    getUnansweredDoubts(): Promise<Array<Doubt>>;
+    getAnsweredDoubts(): Promise<Array<Doubt>>;
     submitDoubt(category: string, message: string): Promise<string>;
-    updateDoubt(doubtId: string, newCategory: string, newMessage: string): Promise<void>;
+    answerDoubt(doubtId: string, teacherName: string, answer: string): Promise<void>;
 }
